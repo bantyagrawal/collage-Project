@@ -16,7 +16,6 @@ const signup = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    console.log('PASSWORD',req.body.password);
     const result = await loginService(req.body);
     res.status(result.status).send(result);
   } catch (err) {
