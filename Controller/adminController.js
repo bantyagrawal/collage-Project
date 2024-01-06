@@ -9,6 +9,7 @@ const signupAdmin = async (req, res) => {
     }
 }
 
+
 const loginAdmin = async (req, res) => {
     try {
         const result = await adminLoginService(req.body);
