@@ -19,8 +19,16 @@ const findOneAndUpdate = async (model,findquery,updatequery) => {
     return await model.findOneAndUpdate(findquery,updatequery,{new: true});
 }
 
+const findAll = async (model) => {
+    try {
+        return await model.find();
+    } catch (err) {
+        throw err;
+    }
+}
 module.exports = {
     findOne,
     saveData,
     findOneAndUpdate,
+    findAll,
 }

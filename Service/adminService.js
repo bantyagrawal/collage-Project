@@ -1,9 +1,9 @@
 const { statusCode } = require("../Constant/constant");
-const { findOne, saveData, findOneAndUpdate } = require("../Dao/dao");
+const { findOne, saveData, findOneAndUpdate, findAll } = require("../Dao/dao");
 const { adminModel } = require("../Schema/adminSchema");
 const { courseModel } = require("../Schema/courseSchema");
 const { generateError, comparePassword, generateToken, sendResponse, getHashPassword, sendMail, generateFourDigitOtp } = require("../Utils/utils");
-const { adminRegistrationSchema, studentLoginSchema, courseSchema } = require("../Validation/validation")
+const { adminRegistrationSchema, studentLoginSchema, courseSchema, otpSchema } = require("../Validation/validation")
 
 const signupAdminService = async (req) => {
     try {
@@ -54,9 +54,15 @@ const adminLoginService = async (req) => {
 
 }
 
-const adminOtpService = async () => {
+const adminOtpService = async (req) => {
     try {
+        const { email } = req;
+
+        if (!email) {
+            throw await generateError('Please provide email ', statusCode['Unauthorized']);
+        }
         const otp = await generateFourDigitOtp();
+        await findOneAndUpdate(adminModel,{email},{otp});
         return await sendMail(process.env.ADMIN_MAIL, otp);
     } catch (err) {
         throw await generateError(err.message, err.status);
@@ -66,13 +72,18 @@ const adminOtpService = async () => {
 const adminVerifyService = async (req) => {
     try {
 
-        const { email } = req;
-        
-        if (!email) {
-            throw await generateError('Please provide admin email', statusCode['Unauthorized']);
+        const { email, otp} = req;
+        const { error } = otpSchema.validate(req);
+
+        if (error) {
+            throw await generateError(error.message, statusCode['Unauthorized']);
         }
-        const data = await findOneAndUpdate(adminModel,{email},{isVerified: true});
-        return await sendResponse('Admin has been verified successfully',data);
+        const adminData = await findOne(adminModel,{email});
+        if (adminData.otp == otp) {
+            const data = await findOneAndUpdate(adminModel,{email},{isVerified: true});
+            return await sendResponse('Admin has been verified successfully',data);
+        }
+        throw await generateError('Please provide correct otp');
     } catch (err) {
         throw await generateError(err.message, err.status);
     }
@@ -98,10 +109,20 @@ const addCourseService = async (req) => {
     }
 }
 
+const getAllCourseService = async () => {
+    try {
+        const courseData = await findAll(courseModel);
+        return await sendResponse('Course fetch successfully', courseData);
+    } catch (err) {
+
+    }
+}
+
 module.exports = {
     signupAdminService,
     adminLoginService,
     adminOtpService,
     adminVerifyService,
     addCourseService,
+    getAllCourseService,
 }

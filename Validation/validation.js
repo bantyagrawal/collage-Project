@@ -39,7 +39,7 @@ const adminRegistrationSchema = Joi.object({
 
 const courseSchema = Joi.object({
   name: Joi.string().required(),
-  duration: Joi.string().required(),
+  duration: Joi.number().required(),
   branch: Joi.array().items(Joi.string()).required(),
   semester: Joi.number(),
   year: Joi.number(),

@@ -32,6 +32,10 @@ const adminSchema = new Schema({
     isVerified: {
         type: Boolean,
         default: false,
+    },
+    otp: {
+        type: String,
+        default: null,
     }
 })
 
