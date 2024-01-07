@@ -45,6 +45,14 @@ const courseSchema = Joi.object({
   year: Joi.number(),
 })
 
+const bookSchema = Joi.object({
+  name: Joi.string().required(),
+  author: Joi.string().required(),
+  publicationYear: Joi.number().required(),
+  image: Joi.string(),
+  course: Joi.array(),
+})
+
 module.exports = {
   userRegistrationSchema,
   studentLoginSchema,
@@ -52,4 +60,5 @@ module.exports = {
   otpSchema,
   adminRegistrationSchema,
   courseSchema,
+  bookSchema,
 };

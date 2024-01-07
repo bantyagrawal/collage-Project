@@ -1,9 +1,10 @@
 const { statusCode } = require("../Constant/constant");
-const { findOne, saveData, findOneAndUpdate, findAll } = require("../Dao/dao");
+const { findOne, saveData, findOneAndUpdate, findAll, updateById } = require("../Dao/dao");
 const { adminModel } = require("../Schema/adminSchema");
+const { bookModel } = require("../Schema/bookSchema");
 const { courseModel } = require("../Schema/courseSchema");
 const { generateError, comparePassword, generateToken, sendResponse, getHashPassword, sendMail, generateFourDigitOtp } = require("../Utils/utils");
-const { adminRegistrationSchema, studentLoginSchema, courseSchema, otpSchema } = require("../Validation/validation")
+const { adminRegistrationSchema, studentLoginSchema, courseSchema, otpSchema, bookSchema } = require("../Validation/validation")
 
 const signupAdminService = async (req) => {
     try {
@@ -118,6 +119,32 @@ const getAllCourseService = async () => {
     }
 }
 
+const addBookService = async (req) => {
+    try {
+        const { error } = bookSchema.validate();
+        if (error) {
+            throw await generateError(error.message, statusCode['Bad Request']);
+        }
+        const bookData = await saveData(bookModel, req);
+        return await sendResponse('Book has been saved', bookData);
+    } catch (err) {
+        throw await generateError(error.message, error.status);
+    }
+}
+
+const updateBookService = async (req) => {
+    try {
+        const { _id } = req;
+        if (!_id) {
+            throw await generateError("Please provide book id", statusCode['Bad Request']);
+        }
+        const updateData = await updateById(bookModel, _id, req);
+        return await sendResponse('Book update successfully',updateData);
+    } catch (err) {
+        throw await generateError(err.message, err.status);
+    }
+}
+
 module.exports = {
     signupAdminService,
     adminLoginService,
@@ -125,4 +152,6 @@ module.exports = {
     adminVerifyService,
     addCourseService,
     getAllCourseService,
+    addBookService,
+    updateBookService,
 }

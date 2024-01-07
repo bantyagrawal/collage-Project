@@ -1,3 +1,6 @@
+const { statusCode } = require("../Constant/constant");
+const { generateError } = require("../Utils/utils");
+
 const findOne = async (model,query) => {
     try {
         const data = await model.findOne(query);
@@ -26,9 +29,19 @@ const findAll = async (model) => {
         throw err;
     }
 }
+
+const updateById = async (model, id, updatequery) => {
+    try {
+        return await model.findByIdAndUpdate(id,updatequery,{new: true});
+    } catch (err) {
+        throw await generateError(err.message,statusCode['Internal Server Error']);
+    }
+}
+
 module.exports = {
     findOne,
     saveData,
     findOneAndUpdate,
     findAll,
+    updateById,
 }
