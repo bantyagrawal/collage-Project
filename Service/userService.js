@@ -1,8 +1,10 @@
 const { statusCode } = require('../Constant/constant');
 const { StudentModel } = require('../Schema/studentSchema');
-const { userRegistrationSchema, studentLoginSchema, changePasswordSchema, otpSchema } = require('../Validation/validation');
+const { userRegistrationSchema, studentLoginSchema, changePasswordSchema, otpSchema, asignBookSchema } = require('../Validation/validation');
 const { getHashPassword, comparePassword, generateToken, generateError, sendResponse, sendMail, generateFourDigitOtp } = require('../Utils/utils');
-const { findOne, saveData, findOneAndUpdate } = require('../Dao/dao');
+const { findOne, saveData, findOneAndUpdate, findByQuery, findAll, findID, updateById } = require('../Dao/dao');
+const { bookModel } = require('../Schema/bookSchema');
+const { asignedBookModel } = require('../Schema/asignedBookSchema');
 
 const signupService = async (req) => {
   try {
@@ -130,10 +132,63 @@ const verifyStudentService = async (req) => {
   }
 }
 
+const getRecommendedBookService = async (req) => {
+  try {
+    const { course, branch, semester,year } = req;
+    const findQuery = {
+      'course.courseName': course,
+      'course.branch': branch,
+      'course.semester': semester,
+      'course.year': year,
+    };
+    const bookData = await findByQuery(bookModel, findQuery);
+    return await sendResponse('Book fetched successfully', bookData);
+  } catch (err) {
+    throw await generateError(err.message, err.status);
+  }
+}
+
+const getAllBookService = async () => {
+  try {
+    const bookData = await findAll(bookModel);
+    return await sendResponse('Book fetched successfully', bookData);
+  } catch (err) {
+    throw await generateError(err.message, err.status);
+  }
+}
+
+const asignBookService = async (req) => {
+  try {
+    const { _id } = req.student;
+    req.body.user = _id;
+    const { book, user } = req.body;
+    const { error } = asignBookSchema.validate(req.body);
+    if (error) {
+      throw await generateError(error.message, statusCode['Bad Request']);
+    }
+    const asignBookData = await findOne(asignedBookModel, {user, book, isDeleted: false});
+    if (asignBookData) {
+      throw await generateError('Book already asigned to student', statusCode['Already Reported']);
+    }
+    const bookData = await findID(bookModel, book);
+    if (bookData.availableBook == 0) {
+      throw await generateError('Book is not in stock', statusCode['Forbidden']);
+    }
+    await updateById(bookModel, book, {availableBook: (bookData.availableBook - 1)});
+    const asignedBook = await saveData(asignedBookModel, req.body);
+    return await sendResponse('Book has been asigned to student', asignedBook);
+  } catch (err) {
+    throw await generateError(err.message, err.status);
+  }
+}
+
 module.exports = {
   signupService,
   loginService,
   changePasswordService,
   sendOtpService,
-  verifyStudentService
+  verifyStudentService,
+  getRecommendedBookService,
+  getAllBookService,
+  asignBookService,
 };

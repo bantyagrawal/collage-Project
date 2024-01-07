@@ -42,15 +42,23 @@ const courseSchema = Joi.object({
   duration: Joi.number().required(),
   branch: Joi.array().items(Joi.string()).required(),
   semester: Joi.number(),
-  year: Joi.number(),
 })
 
 const bookSchema = Joi.object({
   name: Joi.string().required(),
   author: Joi.string().required(),
-  publicationYear: Joi.number().required(),
+  publicationYear: Joi.number().positive().required(),
+  price: Joi.number().positive().required(),
   image: Joi.string(),
   course: Joi.array(),
+  totalBook: Joi.number().required()
+})
+
+const asignBookSchema = Joi.object({
+  user: Joi.string().required(),
+  book: Joi.string().required(),
+  asignedDate: Joi.number(),
+  expireDate: Joi.number(),
 })
 
 module.exports = {
@@ -61,4 +69,5 @@ module.exports = {
   adminRegistrationSchema,
   courseSchema,
   bookSchema,
+  asignBookSchema,
 };

@@ -1,5 +1,5 @@
 const { statusCode } = require('../Constant/constant');
-const { signupService, loginService, changePasswordService, sendOtpService, verifyStudentService,  } = require('../Service/userService');
+const { signupService, loginService, changePasswordService, sendOtpService, verifyStudentService, getRecommendedBookService, getAllBookService, asignBookService, } = require('../Service/userService');
 
 const signup = async (req, res) => {
   try {
@@ -20,7 +20,7 @@ const login = async (req, res) => {
     res.status(result.status).send(result);
   } catch (err) {
     res.status(err.status).send(err.message);
-    }
+  }
 }
 
 const changePassword = async (req, res) => {
@@ -50,10 +50,40 @@ const verifyStudent = async (req, res) => {
   }
 }
 
+const getRecommendedBook = async (req, res) => {
+  try {
+    const result = await getRecommendedBookService(req.student);
+    res.status(result.status).send(result);
+  } catch (err) {
+    res.status(err.status).send(err.message);
+  }
+}
+
+const getAllBooks = async (req, res) => {
+  try {
+    const result = await getAllBookService();
+    res.status(result.status).send(result);
+  } catch (err) {
+    res.status(err.status).send(err.message);
+  }
+}
+
+const asignBook = async (req, res) => {
+  try {
+    const result = await asignBookService(req);
+    res.status(result.status).send(result);
+  } catch (err) {
+    res.status(err.status).send(err.message);
+  }
+}
+
 module.exports = {
   signup,
   login,
   changePassword,
   sendOtp,
-  verifyStudent
+  verifyStudent,
+  getRecommendedBook,
+  getAllBooks,
+  asignBook,
 };

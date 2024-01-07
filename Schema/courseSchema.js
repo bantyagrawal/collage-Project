@@ -13,18 +13,10 @@ const courseSchema = new Schema({
         type: [String],
         required: true,
     },
-    isSemester: {
-        type: Boolean,
-        default: true,
-    },
     semester: {
-        type: Number,
+        type: [Number],
         default: null,
     },
-    year: {
-        type: Number,
-        default: null
-    }
 },
     { timestamps: true },
 );

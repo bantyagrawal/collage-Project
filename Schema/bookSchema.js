@@ -37,6 +37,17 @@ const bookSchema = new Schema({
             }
         }],
         default: []
+    },
+    price: {
+        type: Number,
+        required: true,
+    },
+    totalBook: {
+        type: Number,
+        required: true,
+    },
+    availableBook: {
+        type: Number,
     }
 },
 {timestamps: true},

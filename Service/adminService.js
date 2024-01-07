@@ -102,7 +102,11 @@ const addCourseService = async (req) => {
         if (courseFound) {
             throw await generateError('Course already exist',statusCode['Already Reported']);
         }
-
+        const sem = req.semester;
+        req.semester = [];
+        for(let i = 0; i<sem; i++){
+            req.semester.push(i + 1);
+        }
         const courseData = await saveData(courseModel, req);
         return await sendResponse('course added successfully', courseData);
     } catch (err) {
@@ -121,22 +125,27 @@ const getAllCourseService = async () => {
 
 const addBookService = async (req) => {
     try {
-        const { error } = bookSchema.validate();
+        const { error } =  bookSchema.validate(req);
         if (error) {
             throw await generateError(error.message, statusCode['Bad Request']);
         }
+        req.availableBook = req.totalBook;
         const bookData = await saveData(bookModel, req);
         return await sendResponse('Book has been saved', bookData);
     } catch (err) {
-        throw await generateError(error.message, error.status);
+        throw await generateError(err.message, err.status);
     }
 }
 
 const updateBookService = async (req) => {
     try {
-        const { _id } = req;
+        const { _id, totalBook} = req;
         if (!_id) {
             throw await generateError("Please provide book id", statusCode['Bad Request']);
+        }
+        const bookData = await findOne(bookModel, {_id});
+        if (totalBook) {
+            req.availableBook = bookData.availableBook + (totalBook - bookData.totalBook);
         }
         const updateData = await updateById(bookModel, _id, req);
         return await sendResponse('Book update successfully',updateData);
