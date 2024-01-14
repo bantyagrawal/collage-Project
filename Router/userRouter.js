@@ -7,7 +7,8 @@ const {
   verifyStudent, 
   getRecommendedBook, 
   getAllBooks, 
-  asignBook 
+  asignBook, 
+  studentExpireBook
 } = require('../Controller/userController');
 const { userVarification } = require('../Middleware/middleware');
 
@@ -21,6 +22,7 @@ userRouter.post('/verifystudent', verifyStudent);
 userRouter.get('/getrecommendedbook', userVarification, getRecommendedBook);
 userRouter.get('/getallbooks', userVarification, getAllBooks);
 userRouter.post('/asignbook', userVarification, asignBook);
+userRouter.get('/expirebook', userVarification, studentExpireBook);
 
 module.exports = {
   userRouter,

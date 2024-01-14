@@ -86,6 +86,34 @@ const generateFourDigitOtp = async () => {
     return otp;
 }
 
+const sendEmailFromService = async (email, htmlTamplate, subject) => {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.SEND_OTP_MAIL,
+                pass: process.env.SEND_OTP_PASSWORD
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.SEND_OTP_MAIL,
+            to: email,
+            subject: subject,
+            html: htmlTamplate
+        };
+
+        await transporter.sendMail(mailOptions);
+        return {
+         success: true,
+         status: statusCode['OK'],
+         message: 'Email has been send',
+        }
+    } catch (err) {
+
+    }
+}
+
 module.exports = {
     getHashPassword,
     comparePassword,
@@ -94,5 +122,6 @@ module.exports = {
     verifyToken,
     sendResponse,
     sendMail,
-    generateFourDigitOtp
+    generateFourDigitOtp,
+    sendEmailFromService,
 }

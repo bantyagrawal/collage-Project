@@ -1,3 +1,4 @@
+const { constants } = require("fs/promises");
 const { statusCode } = require("../Constant/constant");
 const { generateError } = require("../Utils/utils");
 
@@ -54,6 +55,14 @@ const findID = async (model, id) => {
     }
 }
 
+const populateQuery = async (model, findQuery, populateQuery) => {
+    try {
+        return await model.find(findQuery).populate(populateQuery);
+    } catch (err) {
+        throw await generateError(err.message, statusCode['Internal Server Error']);
+    }
+}
+
 module.exports = {
     findOne,
     saveData,
@@ -62,4 +71,5 @@ module.exports = {
     updateById,
     findByQuery,
     findID,
+    populateQuery,
 }

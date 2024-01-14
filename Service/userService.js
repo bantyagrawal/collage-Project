@@ -1,14 +1,36 @@
+const schedule = require('node-schedule');
+const fs = require('fs');
+const { bookModel } = require('../Schema/bookSchema');
 const { statusCode } = require('../Constant/constant');
 const { StudentModel } = require('../Schema/studentSchema');
-const { userRegistrationSchema, studentLoginSchema, changePasswordSchema, otpSchema, asignBookSchema } = require('../Validation/validation');
-const { getHashPassword, comparePassword, generateToken, generateError, sendResponse, sendMail, generateFourDigitOtp } = require('../Utils/utils');
-const { findOne, saveData, findOneAndUpdate, findByQuery, findAll, findID, updateById } = require('../Dao/dao');
-const { bookModel } = require('../Schema/bookSchema');
 const { asignedBookModel } = require('../Schema/asignedBookSchema');
+const { userRegistrationSchema, studentLoginSchema, changePasswordSchema, otpSchema, asignBookSchema } = require('../Validation/validation');
+const { getHashPassword, comparePassword, generateToken, generateError, sendResponse, sendMail, generateFourDigitOtp, sendEmailFromService } = require('../Utils/utils');
+const { findOne, saveData, findOneAndUpdate, findByQuery, findAll, findID, updateById, populateQuery } = require('../Dao/dao');
+
+const  scheduledTask = async () =>  {
+      try {
+        const today = new Date().setHours(0, 0, 0, 0);
+        const findQuery = { isDeleted: false, expireDate: { $lt: today } };
+        const populate = [{ path: 'user', select: 'email' }, { path: 'book' }];
+        const result = await populateQuery(asignedBookModel, findQuery, populate);
+        result.forEach(async (element) => {
+          const htmlTemplate = fs.readFileSync('Template/expireBook.html', 'utf-8');
+          let formattedHtml = htmlTemplate.replace('{{name}}', element.book.name);
+          formattedHtml = formattedHtml.replace('{{authorName}}', element.book.author);
+          const sendEmailResult = await sendEmailFromService(element.user.email,formattedHtml,'Please submit the book')
+        })
+    } catch (error) {
+        console.error('Error in scheduled task:', error);
+    }
+}
+
+const job = schedule.scheduleJob('28 20 * * *', scheduledTask);
+
 
 const signupService = async (req) => {
   try {
-    const { email , registrationNumber } = req;
+    const { email, registrationNumber } = req;
     const { error } = userRegistrationSchema.validate(req);
     if (error) {
       const err = new Error(error.message);
@@ -18,7 +40,7 @@ const signupService = async (req) => {
     req.password = await getHashPassword(req.password);
 
     const query = { email, isDeleted: false };
-    const studentFound = await findOne(StudentModel, query) || await findOne(StudentModel, {registrationNumber, isDeleted: false});
+    const studentFound = await findOne(StudentModel, query) || await findOne(StudentModel, { registrationNumber, isDeleted: false });
     if (studentFound) {
       const error = new Error('Student already exist');
       error.status = statusCode['Already Reported'];
@@ -73,7 +95,7 @@ const changePasswordService = async (req) => {
   try {
     const { error } = changePasswordSchema.validate(req.body);
     const { email } = req.student;
-    const { password } = await findOne(StudentModel,{email});
+    const { password } = await findOne(StudentModel, { email });
     const { oldPassword, newPassword } = req.body
 
     if (error) {
@@ -86,7 +108,7 @@ const changePasswordService = async (req) => {
 
     const hashPassword = await getHashPassword(newPassword);
 
-    const changedData = await findOneAndUpdate(StudentModel,{email},{password: hashPassword});
+    const changedData = await findOneAndUpdate(StudentModel, { email }, { password: hashPassword });
 
     return await sendResponse('Password has been changed', changedData);
   } catch (err) {
@@ -102,7 +124,7 @@ const sendOtpService = async (email) => {
     }
 
     const otp = await generateFourDigitOtp();
-    await findOneAndUpdate(StudentModel,{email},{otp});
+    await findOneAndUpdate(StudentModel, { email }, { otp });
     return await sendMail(email, otp);
 
   } catch (err) {
@@ -119,11 +141,11 @@ const verifyStudentService = async (req) => {
       throw await generateError(error.message, statusCode['Bad Request']);
     }
 
-    const studentData = await findOne(StudentModel, {email});
+    const studentData = await findOne(StudentModel, { email });
 
     if (otp == studentData.otp) {
-      const result = await findOneAndUpdate(StudentModel,{email},{isVerify: true});
-      return await sendResponse('Student has been verify',result);
+      const result = await findOneAndUpdate(StudentModel, { email }, { isVerify: true });
+      return await sendResponse('Student has been verify', result);
     }
 
     throw await generateError('Please give correct otp', statusCode['Unauthorized']);
@@ -134,7 +156,7 @@ const verifyStudentService = async (req) => {
 
 const getRecommendedBookService = async (req) => {
   try {
-    const { course, branch, semester,year } = req;
+    const { course, branch, semester, year } = req;
     const findQuery = {
       'course.courseName': course,
       'course.branch': branch,
@@ -166,7 +188,7 @@ const asignBookService = async (req) => {
     if (error) {
       throw await generateError(error.message, statusCode['Bad Request']);
     }
-    const asignBookData = await findOne(asignedBookModel, {user, book, isDeleted: false});
+    const asignBookData = await findOne(asignedBookModel, { user, book, isDeleted: false });
     if (asignBookData) {
       throw await generateError('Book already asigned to student', statusCode['Already Reported']);
     }
@@ -174,9 +196,22 @@ const asignBookService = async (req) => {
     if (bookData.availableBook == 0) {
       throw await generateError('Book is not in stock', statusCode['Forbidden']);
     }
-    await updateById(bookModel, book, {availableBook: (bookData.availableBook - 1)});
+    await updateById(bookModel, book, { availableBook: (bookData.availableBook - 1) });
     const asignedBook = await saveData(asignedBookModel, req.body);
     return await sendResponse('Book has been asigned to student', asignedBook);
+  } catch (err) {
+    throw await generateError(err.message, err.status);
+  }
+}
+
+const studentExpireBookService = async (req) => {
+  try {
+    const { _id } = req;
+    const today = new Date().setHours(0,0,0,0);
+    const findQuery = { user: _id, isDeleted: false, expireDate: {$lt : today} };
+    const populate = [{ path: 'user' }, { path: 'book' }];
+    const result = await populateQuery(asignedBookModel, findQuery, populate);
+    return await sendResponse('Expired book fetch successfully', result);
   } catch (err) {
     throw await generateError(err.message, err.status);
   }
@@ -191,4 +226,5 @@ module.exports = {
   getRecommendedBookService,
   getAllBookService,
   asignBookService,
+  studentExpireBookService,
 };
