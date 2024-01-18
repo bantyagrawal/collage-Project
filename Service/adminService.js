@@ -1,10 +1,12 @@
 const { statusCode } = require("../Constant/constant");
-const { findOne, saveData, findOneAndUpdate, findAll, updateById } = require("../Dao/dao");
+const { findOne, saveData, findOneAndUpdate, findAll, updateById, findByQuery } = require("../Dao/dao");
 const { adminModel } = require("../Schema/adminSchema");
+const { asignedBookModel } = require("../Schema/asignedBookSchema");
 const { bookModel } = require("../Schema/bookSchema");
 const { courseModel } = require("../Schema/courseSchema");
+const { StudentModel } = require("../Schema/studentSchema");
 const { generateError, comparePassword, generateToken, sendResponse, getHashPassword, sendMail, generateFourDigitOtp } = require("../Utils/utils");
-const { adminRegistrationSchema, studentLoginSchema, courseSchema, otpSchema, bookSchema } = require("../Validation/validation")
+const { adminRegistrationSchema, studentLoginSchema, courseSchema, otpSchema, bookSchema, asignBookSchema, verifyAsignBookSchema } = require("../Validation/validation")
 
 const signupAdminService = async (req) => {
     try {
@@ -154,6 +156,47 @@ const updateBookService = async (req) => {
     }
 }
 
+const sendOtpToUserForVerifyAsignBookService = async (req) => {
+    try {
+        const { email, bookId } = req;
+        if (!email) {
+            throw await generateError("Please provide student email", statusCode['Bad Request']);
+        }
+        const studentData = await findOne(StudentModel, { email });
+        if (!studentData) {
+            throw await generateError("Please provide the correct email", statusCode['Bad Request']);
+        }
+        const _id = studentData._id;
+        const otp = await generateFourDigitOtp();
+        const sendOtp = await sendMail(email, otp);
+        await findOneAndUpdate(asignedBookModel, {_id: bookId}, {otp});
+        sendOtp.studentId = _id
+        return sendOtp;
+    } catch (err) {
+        throw await generateError(err.message, err.status);
+    }
+}
+
+const verifyAsignedBookService = async (req) => {
+    try {
+        const { otp, bookId } = req;
+        const { error } = verifyAsignBookSchema.validate(req);
+        const newDate = new Date().getTime();
+        if (error) {
+            throw await generateError(error.message, statusCode['Bad Request']);
+        }
+        const asignBookData = await findOne(asignedBookModel, {_id: bookId});
+        const expireDate = newDate + (asignBookData.expireDate - asignBookData.asignedDate);
+        if (otp != asignBookData.otp) {
+            throw await generateError('Please provide correct otp', statusCode['Not Found']);
+        }
+        const asignedBookUpdatedData = await findOneAndUpdate(asignedBookModel, {_id: bookId}, {isVerify: true, asignedDate: newDate, expireDate: expireDate});
+        return await sendResponse('Asigned book has been verified', asignedBookUpdatedData);
+    } catch (err) {
+        throw await generateError(err.message, err.status);
+    }
+}
+
 module.exports = {
     signupAdminService,
     adminLoginService,
@@ -163,4 +206,6 @@ module.exports = {
     getAllCourseService,
     addBookService,
     updateBookService,
+    sendOtpToUserForVerifyAsignBookService,
+    verifyAsignedBookService,
 }

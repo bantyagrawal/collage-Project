@@ -17,7 +17,6 @@ const asignedBookSchema = new Schema({
         type: Number,
         default: () => {
             const assignedDate = this.asignedDate || Date.now();
-            console.log('ASSIGNED DATE', assignedDate);
             return assignedDate + 7 * 24 * 60 * 60 * 1000;
         }
     },
@@ -25,6 +24,14 @@ const asignedBookSchema = new Schema({
         type: Boolean,
         default: false,
     },
+    isVerify: {
+        type: Boolean,
+        default: false,
+    },
+    otp: {
+        type: Number,
+        default: null
+    }
 })
 
 const asignedBookModel = model('AsignedBook', asignedBookSchema);

@@ -61,6 +61,11 @@ const asignBookSchema = Joi.object({
   expireDate: Joi.number(),
 })
 
+const verifyAsignBookSchema = Joi.object({
+  otp: Joi.number().required(),
+  bookId: Joi.string().required()
+})
+
 module.exports = {
   userRegistrationSchema,
   studentLoginSchema,
@@ -70,4 +75,5 @@ module.exports = {
   courseSchema,
   bookSchema,
   asignBookSchema,
+  verifyAsignBookSchema,
 };

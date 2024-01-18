@@ -1,4 +1,15 @@
-const { signupAdminService, adminLoginService, adminOtpService, addCourseService, adminVerifyService, getAllCourseService, addBookService, updateBookService } = require("../Service/adminService")
+const { 
+    signupAdminService, 
+    adminLoginService, 
+    adminOtpService, 
+    addCourseService, 
+    adminVerifyService, 
+    getAllCourseService, 
+    addBookService, 
+    updateBookService, 
+    sendOtpToUserForVerifyAsignBookService, 
+    verifyAsignedBookService
+} = require("../Service/adminService")
 
 const signupAdmin = async (req, res) => {
     try {
@@ -74,6 +85,24 @@ const updateBook = async (req, res) => {
     }
 }
 
+const sendOtpToUserForVerifyAsignBook = async (req, res) => {
+    try {
+        const result = await sendOtpToUserForVerifyAsignBookService(req.body);
+        res.status(result.status).send(result);
+    } catch (err) {
+        res.status(err.status).send(err.message);
+    }
+}
+
+const verifyAsignedBook = async (req, res) => {
+    try {
+        const result = await verifyAsignedBookService(req.body);
+        res.status(result.status).send(result);
+    } catch (err) {
+        res.status(err.status).send(err.message);
+    }
+}
+
 module.exports = {
     signupAdmin,
     loginAdmin,
@@ -83,4 +112,6 @@ module.exports = {
     getAllCourse,
     addBook,
     updateBook,
+    sendOtpToUserForVerifyAsignBook,
+    verifyAsignedBook,
 }

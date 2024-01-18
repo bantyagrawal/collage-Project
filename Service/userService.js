@@ -208,7 +208,7 @@ const studentExpireBookService = async (req) => {
   try {
     const { _id } = req;
     const today = new Date().setHours(0,0,0,0);
-    const findQuery = { user: _id, isDeleted: false, expireDate: {$lt : today} };
+    const findQuery = { user: _id, isDeleted: false, isVerify: true, expireDate: {$lt : today} };
     const populate = [{ path: 'user' }, { path: 'book' }];
     const result = await populateQuery(asignedBookModel, findQuery, populate);
     return await sendResponse('Expired book fetch successfully', result);
