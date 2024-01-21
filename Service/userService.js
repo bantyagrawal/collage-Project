@@ -78,9 +78,7 @@ const loginService = async (req) => {
     const isPasswordCorrect = await comparePassword(password, studentData.password);
 
     if (!isPasswordCorrect) {
-      const err = new Error('Password is not correct');
-      err.status = statusCode['Unauthorized'];
-      throw err;
+      throw await generateError('Password is not correct', statusCode['Bad Request'])
     }
 
     const token = await generateToken(studentData, process.env.USER_SECRATE);
