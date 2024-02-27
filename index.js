@@ -13,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(userRouter);
 app.use(adminRouter);
+app.use(express.static('collage-project'));
 
 app.listen(8080, () => {
   console.log('server devloyed');
