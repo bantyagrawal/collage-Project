@@ -1,4 +1,6 @@
 const express = require('express');
+const multer = require('multer');
+
 const { 
   signup,
   login, 
@@ -8,9 +10,11 @@ const {
   getRecommendedBook, 
   getAllBooks, 
   asignBook, 
-  studentExpireBook
+  studentExpireBook,
+  uploadFile
 } = require('../Controller/userController');
 const { userVarification } = require('../Middleware/middleware');
+const upload = multer({storage : multer.memoryStorage() });
 
 const userRouter = express.Router();
 
@@ -23,7 +27,7 @@ userRouter.get('/getrecommendedbook', userVarification, getRecommendedBook);
 userRouter.get('/getallbooks', userVarification, getAllBooks);
 userRouter.post('/asignbook', userVarification, asignBook);
 userRouter.get('/expirebook', userVarification, studentExpireBook);
-
+userRouter.post('/upload', upload.single('file'), uploadFile);
 module.exports = {
   userRouter,
 };

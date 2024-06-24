@@ -1,5 +1,5 @@
 const { statusCode } = require('../Constant/constant');
-const { signupService, loginService, changePasswordService, sendOtpService, verifyStudentService, getRecommendedBookService, getAllBookService, asignBookService, studentExpireBookService, } = require('../Service/userService');
+const { signupService, loginService, changePasswordService, sendOtpService, verifyStudentService, getRecommendedBookService, getAllBookService, asignBookService, studentExpireBookService, uploadFileService} = require('../Service/userService');
 
 const signup = async (req, res) => {
   try {
@@ -86,6 +86,15 @@ const studentExpireBook = async (req, res) => {
   }
 }
 
+const uploadFile = async (req, res) => {
+  try {
+    console.log('BIJENDRA');
+    const result = await uploadFileService(req);
+    res.status(result.status).send(result);
+  } catch (err) {
+    res.status(err.status).send(err.message);
+  }
+}
 module.exports = {
   signup,
   login,
@@ -96,4 +105,5 @@ module.exports = {
   getAllBooks,
   asignBook,
   studentExpireBook,
+  uploadFile
 };

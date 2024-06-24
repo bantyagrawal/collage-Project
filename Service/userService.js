@@ -1,13 +1,20 @@
 const schedule = require('node-schedule');
 const fs = require('fs');
+const { initializeApp } = require('firebase/app');
+const { getStorage, ref, getDownloadURL, uploadBytesResumable} = require('firebase/storage');
+
+
 const { bookModel } = require('../Schema/bookSchema');
 const { statusCode } = require('../Constant/constant');
 const { StudentModel } = require('../Schema/studentSchema');
 const { asignedBookModel } = require('../Schema/asignedBookSchema');
+const { firebaseConfig } = require('../config/config')
 const { userRegistrationSchema, studentLoginSchema, changePasswordSchema, otpSchema, asignBookSchema } = require('../Validation/validation');
-const { getHashPassword, comparePassword, generateToken, generateError, sendResponse, sendMail, generateFourDigitOtp, sendEmailFromService } = require('../Utils/utils');
+const { getHashPassword, comparePassword, generateToken, generateError, sendResponse, sendMail, generateFourDigitOtp, sendEmailFromService, giveCurrentDateTime } = require('../Utils/utils');
 const { findOne, saveData, findOneAndUpdate, findByQuery, findAll, findID, updateById, populateQuery } = require('../Dao/dao');
 
+initializeApp(firebaseConfig);
+const storage = getStorage();
 const  scheduledTask = async () =>  {
       try {
         const today = new Date().setHours(0, 0, 0, 0);
@@ -215,6 +222,23 @@ const studentExpireBookService = async (req) => {
   }
 }
 
+const uploadFileService = async (req) => {
+  try {
+    const dateTime = giveCurrentDateTime();
+    const storageRef = ref(storage, `files/${req.file.originalname + " " + dateTime}`);
+    const metaData = {
+      contentType : req.file.minetype,
+    }
+
+    const snapShot = await uploadBytesResumable(storageRef, req.file.buffer, metaData);
+    const downloadURL = await getDownloadURL(snapShot.ref);
+
+    return await sendResponse('File uploaded', downloadURL);
+  } catch (err) {
+    throw await generateError(err.message, err.status);
+  }
+}
+
 module.exports = {
   signupService,
   loginService,
@@ -225,4 +249,5 @@ module.exports = {
   getAllBookService,
   asignBookService,
   studentExpireBookService,
+  uploadFileService,
 };
