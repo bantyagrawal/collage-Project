@@ -11,7 +11,8 @@ const {
   getAllBooks, 
   asignBook, 
   studentExpireBook,
-  uploadFile
+  uploadFile,
+  getStudent,
 } = require('../Controller/userController');
 const { userVarification } = require('../Middleware/middleware');
 const upload = multer({storage : multer.memoryStorage() });
@@ -28,6 +29,7 @@ userRouter.get('/getallbooks', userVarification, getAllBooks);
 userRouter.post('/asignbook', userVarification, asignBook);
 userRouter.get('/expirebook', userVarification, studentExpireBook);
 userRouter.post('/upload', upload.single('file'), uploadFile);
+userRouter.get('/getStudent', userVarification, getStudent);
 module.exports = {
   userRouter,
 };

@@ -12,6 +12,7 @@ const userRegistrationSchema = Joi.object({
   year: Joi.number(),
   branch: Joi.string().required(),
   batch: Joi.string().required(),
+  image: Joi.string(),
 });
 
 const studentLoginSchema = Joi.object({

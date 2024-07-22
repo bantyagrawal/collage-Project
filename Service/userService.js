@@ -227,7 +227,7 @@ const uploadFileService = async (req) => {
     const dateTime = giveCurrentDateTime();
     const storageRef = ref(storage, `files/${req.file.originalname + " " + dateTime}`);
     const metaData = {
-      contentType : req.file.minetype,
+      contentType : req.file.mimetype,
     }
 
     const snapShot = await uploadBytesResumable(storageRef, req.file.buffer, metaData);

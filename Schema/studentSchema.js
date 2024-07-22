@@ -58,6 +58,10 @@ const studentSchema = new Schema(
       type: Number,
       default: null,
     },
+    image: {
+      type: String,
+      default: ''
+    }
   },
   { timestamps: true },
 );
